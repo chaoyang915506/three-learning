@@ -40,7 +40,9 @@
 <script setup>
 import { onMounted, ref } from 'vue';
 import * as THREE from 'three';
-import { CSS2DRenderer, CSS2DObject } from 'three/examples/jsm/renderers/CSS2DRenderer.js';
+// import { CSS2DRenderer, CSS2DObject } from 'three/examples/jsm/renderers/CSS2DRenderer.js';
+// import { CSS2DRenderer,CSS2DObject } from 'three/addons/renderers/CSS2DRenderer.js';
+import { CSS2DRenderer, CSS2DObject } from 'three/addons/renderers/CSS2DRenderer.js';
 
 const showTooltip = ref(false);
 const tooltipPosition = ref({ x: 0, y: 0 });
@@ -88,7 +90,6 @@ const init = () => {
   labelRenderer.domElement.style.position = 'absolute';
   labelRenderer.domElement.style.top = '0';
   labelRenderer.domElement.style.left = '0';
-  labelRenderer.domElement.style.pointerEvents = 'none';
   document.getElementById('three-container').appendChild(labelRenderer.domElement);
 
   // 创建射线检测器
@@ -122,6 +123,26 @@ const init = () => {
 
   // 添加四角按钮
   addCornerButtons();
+
+  // 添加CSS圆形
+  const circleContainer = document.createElement('div');
+  circleContainer.className = 'circle-container';
+  
+  const circle = document.createElement('div');
+  circle.className = 'circle';
+  circle.textContent = '圆形';
+  circle.style.display = 'flex';
+  circle.style.alignItems = 'center';
+  circle.style.justifyContent = 'center';
+  circle.style.color = 'white';
+  circle.style.fontSize = '20px';
+  
+  circleContainer.appendChild(circle);
+
+  const circleLabel = new CSS2DObject(circleContainer);
+  // 调整圆形位置，使其更靠近相机和视野中心
+  circleLabel.position.set(-2, 2, 0);
+  scene.add(circleLabel);
 };
 
 const onMouseMove = (event) => {
@@ -488,5 +509,28 @@ onMounted(() => {
 /* 移除之前的 flag 相关样式 */
 .flag, .flag-label {
   display: none;
+}
+
+/* 更新圆形样式 */
+.circle-container {
+  transform: translate(-50%, -50%);
+  pointer-events: auto !important;
+  z-index: 1000;
+}
+
+.circle {
+  width: 200px;
+  height: 200px;
+  background: linear-gradient(45deg, #2196f3, #21cbf3);
+  border-radius: 50%;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+  transition: all 0.3s ease;
+  cursor: pointer;
+  pointer-events: auto !important;
+}
+
+.circle:hover {
+  transform: scale(1.05);
+  box-shadow: 0 6px 12px rgba(0,0,0,0.3);
 }
 </style> 
