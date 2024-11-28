@@ -269,49 +269,56 @@ const stopDrag = () => {
 };
 
 const completeSelection = () => {
-  // 创一个新的渲染目标
-  const renderTarget = new THREE.WebGLRenderTarget(
-    renderer.domElement.width,
-    renderer.domElement.height
-  );
-
-  // 渲染场景到目标
-  renderer.setRenderTarget(renderTarget);
+  console.log('Selection position:', selectionPosition.value);
+  console.log('Drag offset:', dragOffset.value);
+  console.log('Canvas dimensions:', {
+    width: renderer.domElement.width,
+    height: renderer.domElement.height
+  });
+  
+  // 强制渲染一帧
   renderer.render(scene, camera);
-  renderer.setRenderTarget(null);
-
-  // 创建一个临时画布
-  const canvas = document.createElement('canvas');
-  canvas.width = 500;
-  canvas.height = 300;
-  const context = canvas.getContext('2d');
-
-  // 读取像素
-  const pixelBuffer = new Uint8Array(4 * renderer.domElement.width * renderer.domElement.height);
-  renderer.readRenderTargetPixels(
-    renderTarget,
-    selectionPosition.value.x,
-    renderer.domElement.height - selectionPosition.value.y - 300, // 翻转Y坐标
+  
+  // 获取当前渲染画布
+  const canvas = renderer.domElement;
+  
+  // 创建一个临时画布来存储裁剪的图像
+  const tempCanvas = document.createElement('canvas');
+  tempCanvas.width = 500;
+  tempCanvas.height = 300;
+  const ctx = tempCanvas.getContext('2d');
+  
+  // 计算实际的选区位置
+  const x = selectionPosition.value.x + dragOffset.value.x;
+  const y = selectionPosition.value.y + dragOffset.value.y;
+  
+  // 从渲染画布复制选中区域到临时画布
+  ctx.drawImage(
+    canvas,
+    x,
+    y,
     500,
     300,
-    pixelBuffer
+    0,
+    0,
+    500,
+    300
   );
-
-  // 创建ImageData
-  const imageData = context.createImageData(500, 300);
-  for (let i = 0; i < pixelBuffer.length; i++) {
-    imageData.data[i] = pixelBuffer[i];
+  
+  try {
+    // 创建下载链接
+    const link = document.createElement('a');
+    link.download = 'selection.png';
+    // 将画布转换为 base64 图片数据
+    link.href = tempCanvas.toDataURL('image/png');
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  } catch (error) {
+    console.error('导出图片失败:', error);
   }
-  context.putImageData(imageData, 0, 0);
 
-  // 导出图片
-  const link = document.createElement('a');
-  link.download = 'selection.png';
-  link.href = canvas.toDataURL('image/png');
-  link.click();
-
-  // 清理
-  renderTarget.dispose();
+  // 重置选择状态
   isSelecting.value = false;
 };
 

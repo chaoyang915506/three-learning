@@ -1,3 +1,10 @@
+/$$
+ $ @Author: lichaoyang chaoyang915506@163.com
+ $ @Date: 2024-11-26 22:21:54
+ $ @LastEditTime: 2024-11-28 20:54:40
+ $ @Description: 
+ $ @
+ $/
 // 假设 fn1 是一个已实现的函数，用于计算两点之间的距离
 function fn1(pointA, pointB) {
     let dx = pointB[0] - pointA[0];
