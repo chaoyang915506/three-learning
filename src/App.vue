@@ -1,7 +1,7 @@
 <!--
  * @Author: lichaoyang chaoyang915506@163.com
  * @Date: 2024-11-23 13:38:43
- * @LastEditTime: 2024-11-28 21:00:17
+ * @LastEditTime: 2024-11-30 16:21:49
  * @Description: 
  * 
 -->
@@ -20,6 +20,8 @@
     
     <ThreeScene v-if="currentScene === 'scene1'" />
     <ThreeScene2 v-if="currentScene === 'scene2'" />
+    <ThreeScene3 v-if="currentScene === 'scene3'" />
+    <ThreeScene4 v-if="currentScene === 'scene4'" />
     <SvgPreview v-if="currentScene === 'svgPreview'" />
   </div>
 </template>
@@ -28,13 +30,17 @@
 import { ref } from 'vue';
 import ThreeScene from './components/ThreeScene.vue';
 import ThreeScene2 from './components/ThreeScene2.vue';
+import ThreeScene3 from './components/ThreeScene3.vue';
+import ThreeScene4 from './components/ThreeScene4.vue';
 import SvgPreview from './components/SvgPreview.vue';
 
-const currentScene = ref('scene1');
+const currentScene = ref('scene4');
 
 const tabs = [
   { label: '场景1', value: 'scene1' },
   { label: '场景2', value: 'scene2' },
+  { label: '场景3', value: 'scene3' },
+  { label: '场景4', value: 'scene4' },
   { label: 'SVG预览', value: 'svgPreview' }
 ];
 </script>
