@@ -10,7 +10,10 @@ import { ref, onMounted, onBeforeUnmount } from 'vue';
 import * as THREE from 'three';
 import { SVGRenderer } from 'three/examples/jsm/renderers/SVGRenderer';
 import { CSS2DRenderer, CSS2DObject } from 'three/addons/renderers/CSS2DRenderer.js';
-
+import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
+import { Line2 } from 'three/examples/jsm/lines/Line2.js';
+import { LineGeometry } from 'three/examples/jsm/lines/LineGeometry.js';
+import { LineMaterial } from 'three/examples/jsm/lines/LineMaterial.js';
 // refs
 const threeCanvas = ref(null);
 const animationFrameId = ref(null);
@@ -28,42 +31,65 @@ let _labelRenderer = null;
 let _line = null;
 let _endPoint1 = null;
 let _endPoint2 = null;
-
+let controls = null;
 // methods
 const createLine = () => {
-  // 创建线段的材质（使用基础材质，不需要光照）
-  const lineMaterial = new THREE.LineBasicMaterial({ 
+  // 创建红色线段
+  const redLineGeometry = new LineGeometry();
+  redLineGeometry.setPositions([
+    -2, 1, 0,
+    2, -1, 0
+  ]);
+
+  const redLineMaterial = new LineMaterial({
     color: 0xff0000,
-    linewidth: 2
+    linewidth: 5, // 粗线条
+    resolution: new THREE.Vector2(window.innerWidth, window.innerHeight),
+    dashed: false,
+    vertexColors: false,
+    alphaToCoverage: false,
   });
-  
-  // 创建线段的几何体
-  const points = [];
-  points.push(new THREE.Vector3(-2, 1, 0));
-  points.push(new THREE.Vector3(2, -1, 0));
-  const lineGeometry = new THREE.BufferGeometry().setFromPoints(points);
-  
-  // 创建线段
-  _line = new THREE.Line(lineGeometry, lineMaterial);
+
+  redLineMaterial.resolution.set(window.innerWidth, window.innerHeight);
+  _line = new Line2(redLineGeometry, redLineMaterial);
+  _line.computeLineDistances();
   _scene.add(_line);
 
-  // 创建端点小球（使用基础材质，不需要光照）
+  // 创建端点小球
   const sphereGeometry = new THREE.SphereGeometry(0.1, 16, 16);
   const sphereMaterial = new THREE.MeshBasicMaterial({ 
     color: 0xff0000
   });
 
-  // 创建两个端点小球
   _endPoint1 = new THREE.Mesh(sphereGeometry, sphereMaterial);
   _endPoint2 = new THREE.Mesh(sphereGeometry, sphereMaterial);
   
-  // 设置端点位置
   _endPoint1.position.set(-2, 1, 0);
   _endPoint2.position.set(2, -1, 0);
   
-  // 添加到场景
   _scene.add(_endPoint1);
   _scene.add(_endPoint2);
+
+  // 创建紫色线段
+  const purpleLineGeometry = new LineGeometry();
+  purpleLineGeometry.setPositions([
+    -2, 1, 0.1,
+    2, -1, 0.1
+  ]);
+
+  const purpleLineMaterial = new LineMaterial({
+    color: 0xff00ff,
+    linewidth: 8, // 更粗的线条
+    resolution: new THREE.Vector2(window.innerWidth, window.innerHeight),
+    dashed: false,
+    vertexColors: false,
+    alphaToCoverage: false,
+  });
+
+  purpleLineMaterial.resolution.set(window.innerWidth, window.innerHeight);
+  const purpleLine = new Line2(purpleLineGeometry, purpleLineMaterial);
+  purpleLine.computeLineDistances();
+  _scene.add(purpleLine);
 };
 
 const createMapMarkers = () => {
@@ -88,11 +114,12 @@ const createMapMarkers = () => {
   });
 };
 
+
 const animate = () => {
   if (!_renderer || !_scene || !_camera || !_labelRenderer) {
     return;
   }
-
+  controls.update();
   animationFrameId.value = requestAnimationFrame(animate);
   _renderer.render(_scene, _camera);
   _labelRenderer.render(_scene, _camera);
@@ -109,6 +136,13 @@ const handleResize = () => {
   _renderer.setSize(width, height);
   _labelRenderer.setSize(width, height);
   _renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+
+  // 更新所有线段材质的分辨率
+  _scene.traverse((object) => {
+    if (object.material && object.material.isLineMaterial) {
+      object.material.resolution.set(width, height);
+    }
+  });
 };
 
 const exportToSVG = () => {
@@ -128,7 +162,7 @@ const exportToSVG = () => {
   
   document.body.removeChild(link);
   URL.revokeObjectURL(url);
-  _svgRenderer.dispose();
+  
   _svgRenderer = null;
 };
 
@@ -136,7 +170,7 @@ const exportToSVG = () => {
 onMounted(() => {
   // 创建场景
   _scene = new THREE.Scene();
-  _scene.background = new THREE.Color(0xffffff); // 设置白色背景
+  _scene.background = new THREE.Color(0xe6f3ff); // 修改为浅蓝色
 
   // 创建相机
   _camera = new THREE.PerspectiveCamera(
@@ -150,12 +184,13 @@ onMounted(() => {
   // 创建渲染器
   _renderer = new THREE.WebGLRenderer({
     canvas: threeCanvas.value,
+    alpha: true,
     antialias: true
   });
   _renderer.setSize(window.innerWidth, window.innerHeight);
   _renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-
-  // 添加线段和端点
+  initControls()
+  // 添加线段和点
   createLine();
 
   // 添加 CSS2D 渲染器
@@ -172,6 +207,10 @@ onMounted(() => {
   window.addEventListener('resize', handleResize);
   animate();
 });
+const initControls = () => {
+  controls = new OrbitControls(_camera, _renderer.domElement);
+  controls.enableDamping = true;
+};
 
 onBeforeUnmount(() => {
   if (animationFrameId.value !== null) {
@@ -199,10 +238,6 @@ onBeforeUnmount(() => {
     _renderer.domElement = null;
   }
 
-  if (_svgRenderer) {
-    _svgRenderer.dispose();
-  }
-
   if (_labelRenderer) {
     _labelRenderer.domElement?.remove();
     _labelRenderer = null;
@@ -210,7 +245,7 @@ onBeforeUnmount(() => {
 
   window.removeEventListener('resize', handleResize);
   
-  // 清除引用
+  // 清除用
   _scene = null;
   _camera = null;
   _renderer = null;
@@ -227,10 +262,12 @@ onBeforeUnmount(() => {
   height: 100vh;
   overflow: hidden;
   position: relative;
+  background-color: #e6f3ff;
 }
 
 canvas {
   display: block;
+  background-color: #e6f3ff;
 }
 
 .export-btn {
@@ -238,7 +275,7 @@ canvas {
   top: 20px;
   right: 20px;
   padding: 8px 16px;
-  background-color: #42b983;
+  background-color: #2196f3;
   color: white;
   border: none;
   border-radius: 4px;
@@ -247,7 +284,7 @@ canvas {
 }
 
 .export-btn:hover {
-  background-color: #3aa876;
+  background-color: #1976d2;
 }
 
 .map-marker {

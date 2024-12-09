@@ -13,7 +13,6 @@
       <button @click="completeSelection" :disabled="!isSelecting">完成选取</button>
       <button class="export-btn" @click="exportToSVG">导出SVG</button>
       <button class="capture-btn" @click="captureCSS2D">截取CSS元素</button>
-      <button class="export-css-btn" @click="exportCSS2DSVG">导出CSS SVG</button>
     </div>
 
     <!-- 选区蒙版 -->
@@ -31,7 +30,7 @@
       <div class="selection-border"></div>
     </div>
 
-    <!-- 添加HTML模板 -->
+    <!-- 添加的HTML模板 -->
     <div id="flag-template" style="display: none;">
       <div class="flag">
         🚩
@@ -262,7 +261,7 @@ const init = () => {
 };
 
 const onMouseMove = (event) => {
-  // 更新鼠标位置
+  // 更新鼠标��置
   mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
   mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
 
@@ -623,74 +622,6 @@ const captureCSS2D = () => {
   });
 };
 
-// 添加新的导出函数
-const exportCSS2DSVG = () => {
-  // 获取 CSS2D 容器
-  const css2dContainer = labelRenderer.domElement;
-
-  // 创建 SVG 元素
-  const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-  svg.setAttribute('width', window.innerWidth);
-  svg.setAttribute('height', window.innerHeight);
-  svg.setAttribute('viewBox', `0 0 ${window.innerWidth} ${window.innerHeight}`);
-
-  // 添加样式
-  const style = document.createElementNS('http://www.w3.org/2000/svg', 'style');
-  style.textContent = `
-    .title-container {
-      transform: translate(-50%, -50%);
-      text-align: center;
-    }
-    .title {
-      margin: 0;
-      padding: 10px 20px;
-      background-color: rgba(255, 255, 255, 0.9);
-      border-radius: 8px;
-      box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-    }
-    .subtitle {
-      margin: 0;
-      padding: 8px 16px;
-      background-color: rgba(255, 255, 255, 0.8);
-      border-radius: 6px;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    }
-    .corner-button {
-      background-color: #2196f3;
-      color: white;
-      border: none;
-      border-radius: 4px;
-      padding: 8px 16px;
-      font-size: 14px;
-      box-shadow: 0 2px 5px rgba(0,0,0,0.2);
-    }
-  `;
-  svg.appendChild(style);
-
-  // 将 CSS2D 元素转换为 SVG 元素
-  const foreignObject = document.createElementNS('http://www.w3.org/2000/svg', 'foreignObject');
-  foreignObject.setAttribute('width', '100%');
-  foreignObject.setAttribute('height', '100%');
-  
-  // 克隆 CSS2D 容器
-  const clone = css2dContainer.cloneNode(true);
-  foreignObject.appendChild(clone);
-  svg.appendChild(foreignObject);
-
-  // 导出 SVG
-  const svgContent = new XMLSerializer().serializeToString(svg);
-  const blob = new Blob([svgContent], { type: 'image/svg+xml' });
-  const url = URL.createObjectURL(blob);
-  const link = document.createElement('a');
-  link.href = url;
-  link.download = 'css2d-elements.svg';
-  
-  document.body.appendChild(link);
-  link.click();
-  document.body.removeChild(link);
-  URL.revokeObjectURL(url);
-};
-
 onMounted(() => {
   init();
   animate();
@@ -965,21 +896,6 @@ onBeforeUnmount(() => {
 }
 
 .capture-btn:hover {
-  background-color: #1976d2;
-}
-
-.export-css-btn {
-  margin-right: 10px;
-  padding: 8px 16px;
-  background-color: #2196f3;
-  color: white;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-  z-index: 1000;
-}
-
-.export-css-btn:hover {
   background-color: #1976d2;
 }
 </style> 

@@ -34,7 +34,7 @@ import ThreeScene3 from './components/ThreeScene3.vue';
 import ThreeScene4 from './components/ThreeScene4.vue';
 import SvgPreview from './components/SvgPreview.vue';
 
-const currentScene = ref('scene4');
+const currentScene = ref('scene2');
 
 const tabs = [
   { label: '场景1', value: 'scene1' },
