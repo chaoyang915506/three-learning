@@ -146,23 +146,96 @@ const handleResize = () => {
 };
 
 const exportToSVG = () => {
+  // 创建临时场景用于 SVG 导出
+  const tempScene = new THREE.Scene();
+  tempScene.background = _scene.background;
+
+  // 从原有的红色线段获取坐标
+  const redLinePositions = _line.geometry.attributes.instanceStart.array;
+  const redPoints = [];
+  redPoints.push(new THREE.Vector3(
+    redLinePositions[0],
+    redLinePositions[1],
+    redLinePositions[2]
+  ));
+  redPoints.push(new THREE.Vector3(
+    redLinePositions[3],
+    redLinePositions[4],
+    redLinePositions[5]
+  ));
+  
+  // 创建红色线段
+  const redGeometry = new THREE.BufferGeometry().setFromPoints(redPoints);
+  const redMaterial = new THREE.LineBasicMaterial({ 
+    color: 0xff0000,
+    linewidth: 2
+  });
+  const redLine = new THREE.Line(redGeometry, redMaterial);
+  tempScene.add(redLine);
+
+  // 从原有的紫色线段获取坐标
+  const purpleLine = _scene.children.find(child => 
+    child instanceof Line2 && child.material.color.getHex() === 0xff00ff
+  );
+  const purplePositions = purpleLine.geometry.attributes.instanceStart.array;
+  const purplePoints = [];
+  purplePoints.push(new THREE.Vector3(
+    purplePositions[0],
+    purplePositions[1],
+    purplePositions[2]
+  ));
+  purplePoints.push(new THREE.Vector3(
+    purplePositions[3],
+    purplePositions[4],
+    purplePositions[5]
+  ));
+
+  // 创建紫色线段
+  const purpleGeometry = new THREE.BufferGeometry().setFromPoints(purplePoints);
+  const purpleMaterial = new THREE.LineBasicMaterial({ 
+    color: 0xff00ff,
+    linewidth: 4
+  });
+  const newPurpleLine = new THREE.Line(purpleGeometry, purpleMaterial);
+  tempScene.add(newPurpleLine);
+
+  // 从原有小球获取坐标
+  const endPoint1 = new THREE.Mesh(
+    new THREE.SphereGeometry(0.1, 16, 16),
+    new THREE.MeshBasicMaterial({ color: 0xff0000 })
+  );
+  endPoint1.position.copy(_endPoint1.position);
+  
+  const endPoint2 = new THREE.Mesh(
+    new THREE.SphereGeometry(0.1, 16, 16),
+    new THREE.MeshBasicMaterial({ color: 0xff0000 })
+  );
+  endPoint2.position.copy(_endPoint2.position);
+  
+  tempScene.add(endPoint1);
+  tempScene.add(endPoint2);
+
+  // 创建 SVG 渲染器
   _svgRenderer = new SVGRenderer();
   _svgRenderer.setSize(window.innerWidth, window.innerHeight);
-  _svgRenderer.render(_scene, _camera);
-  
-  const svgContent = _svgRenderer.domElement.outerHTML;
+  _svgRenderer.render(tempScene, _camera);
+
+  // 获取 SVG 内容
+  const svgElement = _svgRenderer.domElement;
+
+  // 导出 SVG
+  const svgContent = svgElement.outerHTML;
   const blob = new Blob([svgContent], { type: 'image/svg+xml' });
   const url = URL.createObjectURL(blob);
   const link = document.createElement('a');
   link.href = url;
   link.download = 'scene.svg';
-  
+
   document.body.appendChild(link);
   link.click();
-  
   document.body.removeChild(link);
   URL.revokeObjectURL(url);
-  
+
   _svgRenderer = null;
 };
 
@@ -258,16 +331,19 @@ onBeforeUnmount(() => {
 
 <style scoped>
 .scene-container {
+  position: absolute;
+  left: 0;
+  top: 0;
   width: 100%;
   height: 100vh;
   overflow: hidden;
-  position: relative;
   background-color: #e6f3ff;
 }
 
 canvas {
   display: block;
-  background-color: #e6f3ff;
+  width: 100%;
+  height: 100%;
 }
 
 .export-btn {

@@ -6,95 +6,60 @@
  * 
 -->
 <template>
-  <div id="app">
-    <div class="nav-buttons">
-      <button 
-        v-for="(tab, index) in tabs" 
-        :key="index"
-        @click="currentScene = tab.value"
-        :class="{ active: currentScene === tab.value }"
-      >
-        {{ tab.label }}
-      </button>
+  <div class="app-container">
+    <Sidebar @collapse="toggleSidebar" />
+    <div class="main-content" :style="contentStyle">
+      <router-view v-slot="{ Component }">
+        <keep-alive>
+          <component :is="Component" />
+        </keep-alive>
+      </router-view>
     </div>
-    
-    <ThreeScene v-if="currentScene === 'scene1'" />
-    <ThreeScene2 v-if="currentScene === 'scene2'" />
-    <ThreeScene3 v-if="currentScene === 'scene3'" />
-    <ThreeScene4 v-if="currentScene === 'scene4'" />
-    <SvgPreview v-if="currentScene === 'svgPreview'" />
   </div>
 </template>
 
 <script setup>
-import { ref } from 'vue';
-import ThreeScene from './components/ThreeScene.vue';
-import ThreeScene2 from './components/ThreeScene2.vue';
-import ThreeScene3 from './components/ThreeScene3.vue';
-import ThreeScene4 from './components/ThreeScene4.vue';
-import SvgPreview from './components/SvgPreview.vue';
+import Sidebar from './components/Sidebar.vue'
+import { ref, provide, onMounted, computed } from 'vue'
+import { useRouter } from 'vue-router'
 
-const currentScene = ref('scene2');
+const router = useRouter()
+const isCollapsed = ref(false)
 
-const tabs = [
-  { label: '场景1', value: 'scene1' },
-  { label: '场景2', value: 'scene2' },
-  { label: '场景3', value: 'scene3' },
-  { label: '场景4', value: 'scene4' },
-  { label: 'SVG预览', value: 'svgPreview' }
-];
+const toggleSidebar = (collapsed) => {
+  isCollapsed.value = collapsed
+}
+
+// 计算内容区域的样式
+const contentStyle = computed(() => ({
+  marginLeft: isCollapsed.value ? '0' : '200px',
+  width: isCollapsed.value ? '100%' : 'calc(100% - 200px)',
+  transition: 'all 0.3s ease'
+}))
+
+provide('isCollapsed', isCollapsed)
+
+onMounted(() => {
+  console.log('Current route:', router.currentRoute.value)
+})
 </script>
 
 <style>
-#app {
-  font-family: Avenir, Helvetica, Arial, sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  text-align: center;
-  color: #2c3e50;
+* {
   margin: 0;
   padding: 0;
+  box-sizing: border-box;
+}
+
+.app-container {
   width: 100vw;
   height: 100vh;
   overflow: hidden;
 }
 
-.nav-buttons {
-  position: fixed;
-  top: 20px;
-  left: 50%;
-  transform: translateX(-50%);
-  z-index: 1000;
-  display: flex;
-  gap: 10px;
-  background-color: rgba(255, 255, 255, 0.9);
-  padding: 8px;
-  border-radius: 8px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-}
-
-button {
-  margin: 0;
-  padding: 8px 16px;
-  background-color: #42b983;
-  color: white;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-  transition: all 0.3s ease;
-}
-
-button:hover {
-  background-color: #3aa876;
-}
-
-button.active {
-  background-color: #2c3e50;
-}
-
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
+.main-content {
+  height: 100vh;
+  overflow: hidden;
+  position: relative;
 }
 </style> 
